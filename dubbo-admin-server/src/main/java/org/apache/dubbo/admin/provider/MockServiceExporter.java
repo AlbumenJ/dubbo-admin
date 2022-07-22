@@ -14,28 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.dubbo.admin.provider;
 
-import org.apache.dubbo.admin.service.MockRuleService;
-import org.apache.dubbo.mock.api.MockContext;
-import org.apache.dubbo.mock.api.MockResult;
+import org.apache.dubbo.config.ServiceConfig;
 import org.apache.dubbo.mock.api.MockService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-/**
- * The {@link MockServiceProvider} register as a dubbo service, provide the mock function for the consumer of {@link MockService}.
- */
 @Component
-public class MockServiceProvider implements MockService {
+public class MockServiceExporter implements CommandLineRunner {
+
+    @Value("${dubbo.mock-server.enable:true}")
+    private boolean enable;
 
     @Autowired
-    private MockRuleService mockRuleService;
+    private MockServiceProvider mockServiceProvider;
 
     @Override
-    public MockResult mock(MockContext mockContext) {
-        return mockRuleService.getMockData(mockContext);
+    public void run(String... args) throws Exception {
+        if (enable) {
+            ServiceConfig<MockService> serviceConfig = new ServiceConfig<>();
+            serviceConfig.setInterface(MockService.class);
+            serviceConfig.setRef(mockServiceProvider);
+            serviceConfig.export();
+        }
     }
 }
